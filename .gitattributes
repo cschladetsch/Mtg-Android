@@ -1,2 +1,5 @@
 *.dll filter=lfs diff=lfs merge=lfs -text
 *.jpg filter=lfs diff=lfs merge=lfs -text
+b3656310-093d-4724-a399-7f7010843b1f-normal.jpg filter=lfs diff=lfs merge=lfs -text
+b3656310-093d-4724-a399-7f7010843b1f-normal.jpg-short.jpg filter=lfs diff=lfs merge=lfs -text
+*.jpeg filter=lfs diff=lfs merge=lfs -text
