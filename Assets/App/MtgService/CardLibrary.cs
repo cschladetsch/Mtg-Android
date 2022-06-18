@@ -6,16 +6,18 @@ using System.Text;
 using System.Threading.Tasks;
 
 using UnityEngine;
+using UnityEngine.Networking;
 
 using Flurl;
 using Flurl.Http;
 
 using Newtonsoft.Json;
+using System.Collections;
 
 #pragma warning disable 649
 
 namespace App.MtgService {
-    public class CardLibrary : MonoBehaviour {
+    public class CardLibrary { //: MonoBehaviour {
         public string Name
         {
             get { return "Test"; } 
@@ -62,7 +64,7 @@ namespace App.MtgService {
 
         //IEnumerator GetGoogleApiVisionKey() {
         //    Log.Warning("----- Loading API Key");
-        //    var keyFile = Path.Combine(UnityEngine.Application.streamingAssetsPath, GoogleVisionApiKeyFileName);
+        //    var keyFile = Path.Combine(UnityEngine.PlayerPrefs., GoogleVisionApiKeyFileName);
         //    using (UnityWebRequest webRequest = UnityWebRequest.Get(GoogleVisionApiKeyFileName)) {
         //        // Request and wait for the desired page.
         //        yield return webRequest.SendWebRequest();
@@ -85,13 +87,19 @@ namespace App.MtgService {
 
         // https://docs.moodkie.com/easy-save-3/es3-guides/saving-loading-resources/
         public CardLibrary() {
-            var settings = new ES3Settings();
-            settings.location = ES3.Location.Resources;
+            var dataPath = UnityEngine.Application.persistentDataPath;
+            Log.Info(dataPath);
+            var sourceFile = Path.Combine(dataPath, GoogleVisionApiKeyFileName);
+            var destFile = Path.Combine(UnityEngine.Application.persistentDataPath, GoogleVisionApiKeyFileName);
+            if (!File.Exists(sourceFile)) {
+                File.Copy(sourceFile, destFile, true);
+            }
 
-            var value = ES3.Load<string>("GoogleVisionApiKey", "GoogleVisionApiKey.bytes", settings);
-            Log.Info("GoogleKey:" + value);
+            _visionApiKey = File.ReadAllText(destFile);
 
-            //_allCardNames = new ES3.Load(AllCardNamesFile);
+            GetAllCardNamesSync();
+
+            return;
         }
 
         public void Clear()
@@ -100,7 +108,7 @@ namespace App.MtgService {
         public Card FindCard(Guid id)
             => _library.Find(id);
 
-        async void GetAllCardNamesSync()
+        private async void GetAllCardNamesSync()
             => await FetchAllCardNames();
 
         public void SaveLibrary(string fileName)
@@ -108,27 +116,14 @@ namespace App.MtgService {
 
         public Card FindCard(string name) {
             var title = Util.ClosestStringMatch.Find(name, _allCardNames.data);
-            if (string.IsNullOrEmpty(title)) {
-                return null;
-            }
-
-            var card = _library.Find(title);
-            if (card == null) {
-                return null;
-            }
-
-            return card;
+            return string.IsNullOrEmpty(title) ? null : _library.Find(title);
         }
 
         public async Task<Card> ProcessFileImage(string fileName) {
-            byte[] bytes = ScaleDown(fileName);
+            var bytes = ScaleDown(fileName);
             var result = await AnalyseImgeText(Convert.ToBase64String(bytes));
             var response = JsonConvert.DeserializeObject<GoogleVisionResponse>(result);
-            if (response != null) {
-                return ProcessVisualAnalysisResponse(response);
-            }
-
-            return null;
+            return response != null ? ProcessVisualAnalysisResponse(response) : null;
         }
 
         public async Task<int> LoadLibrary(string libraryFileName) {
@@ -190,8 +185,8 @@ namespace App.MtgService {
             }
         }
 
-        private byte[] ScaleDown(string fileName) {
-            Texture2D texture = new Texture2D(SentImageWidth, SentImageHeight, TextureFormat.ARGB32, false);
+        private static byte[] ScaleDown(string fileName) {
+            var texture = new Texture2D(SentImageWidth, SentImageHeight, TextureFormat.ARGB32, false);
             texture.LoadImage(File.ReadAllBytes(fileName));
             var bytes = texture.EncodeToJPG();
             File.WriteAllBytes(fileName + "-short.jpg", bytes);

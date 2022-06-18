@@ -112,13 +112,15 @@ namespace App.MtgService {
             // TODO: Use local databases
             var imageName = $"{result.id}-{imageType}.jpg";
             ImageFilename = Path.Combine(dataPath, "images", imageName);
-            if (!File.Exists(ImageFilename)) {
-                // TODO: Use local databases
-                var imageUri = result.image_uris[imageType];
-                var bytes = await imageUri.GetBytesAsync();
-                File.WriteAllBytes(ImageFilename, bytes);
-                Log.Info($"Wrote image for {result.name} to {ImageFilename}");
+            if (File.Exists(ImageFilename)) {
+                return true;
             }
+
+            // TODO: Use local databases
+            var imageUri = result.image_uris[imageType];
+            var bytes = await imageUri.GetBytesAsync();
+            File.WriteAllBytes(ImageFilename, bytes);
+            Log.Info($"Wrote image for {result.name} to {ImageFilename}");
 
             return true;
         }
@@ -126,29 +128,13 @@ namespace App.MtgService {
         string ExpandText(string text) {
             var replacements = new Dictionary<string, string>() {
                 ["{T}"] = "Tap",
-                //["{W}"] = "Plains",
-                //["{B}"] = "Swamp",
-                //["{R}"] = "Mountain",
-                //["{U}"] = "Island",
-                //["{G}"] = "Forest",
+                ["{W}"] = "Plains",
+                ["{B}"] = "Swamp",
+                ["{R}"] = "Mountain",
+                ["{U}"] = "Island",
+                ["{G}"] = "Forest",
             };
             return replacements.Aggregate(text, (current, kv) => current.Replace(kv.Key, kv.Value));
-            //var count = 0;
-            //var startIndex = 0;
-            //var firstIndex = 0;
-            //foreach (var item in replacements) {
-            //    var found = text.IndexOf(item.Value, startIndex);
-            //    if (found > -1) {
-            //        count++;
-            //        if (firstIndex == 0) {
-            //            firstIndex = found;
-            //        }
-            //        startIndex += 3;
-            //    }
-            //}
-
-            //text.Replace(text.Substring(startIndex, found), item.Value);
-            //return text;
         }
     }
 }
