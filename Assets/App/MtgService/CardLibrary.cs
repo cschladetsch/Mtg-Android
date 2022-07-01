@@ -62,29 +62,6 @@ namespace App.MtgService {
             }
         }
 
-        //IEnumerator GetGoogleApiVisionKey() {
-        //    Log.Warning("----- Loading API Key");
-        //    var keyFile = Path.Combine(UnityEngine.PlayerPrefs., GoogleVisionApiKeyFileName);
-        //    using (UnityWebRequest webRequest = UnityWebRequest.Get(GoogleVisionApiKeyFileName)) {
-        //        // Request and wait for the desired page.
-        //        yield return webRequest.SendWebRequest();
-
-        //        switch (webRequest.result) {
-        //            case UnityWebRequest.Result.ConnectionError:
-        //            case UnityWebRequest.Result.DataProcessingError:
-        //                Debug.LogError(": Error: " + webRequest.error);
-        //                break;
-        //            case UnityWebRequest.Result.ProtocolError:
-        //                Debug.LogError(": HTTP Error: " + webRequest.error);
-        //                break;
-        //            case UnityWebRequest.Result.Success:
-        //                Debug.Log(":\nReceived: " + webRequest.downloadHandler.text);
-        //                _visionApiKey = webRequest.downloadHandler.text;
-        //                break;
-        //        }
-        //    }
-        //}
-
         // https://docs.moodkie.com/easy-save-3/es3-guides/saving-loading-resources/
         public CardLibrary() {
             var dataPath = UnityEngine.Application.persistentDataPath;
@@ -121,7 +98,7 @@ namespace App.MtgService {
 
         public async Task<Card> ProcessFileImage(string fileName) {
             var bytes = ScaleDown(fileName);
-            var result = await AnalyseImgeText(Convert.ToBase64String(bytes));
+            var result = await AnalyseImageText(Convert.ToBase64String(bytes));
             var response = JsonConvert.DeserializeObject<GoogleVisionResponse>(result);
             return response != null ? ProcessVisualAnalysisResponse(response) : null;
         }
@@ -213,7 +190,7 @@ namespace App.MtgService {
             return AddCard(visionResponse);
         }
 
-        private async Task<string> AnalyseImgeText(string base64Content) {
+        private async Task<string> AnalyseImageText(string base64Content) {
             var text = @"
             {
              'requests': [
@@ -251,17 +228,17 @@ namespace App.MtgService {
             File.WriteAllText(fileName, sb.ToString());
         }
 
-        private async Task<bool> FetchAllCardNames() {
+        private async Task FetchAllCardNames() {
             try {
                 _allCardNames = await ScryFallEndpoint.AppendPathSegment("catalog/card-names")
                     .SetQueryParam("format", "json")
                     .GetJsonAsync<AllCardNames>();
                 File.WriteAllText(AllCardsFileName, JsonConvert.SerializeObject(_allCardNames));
                 Log.Info($"Fetched {_allCardNames.data.Count} card names");
-                return true;
+                return;
             } catch (Exception e) {
                 Log.Error($"Error: {e.Message}");
-                return false;
+                return;
             }
         }
 
