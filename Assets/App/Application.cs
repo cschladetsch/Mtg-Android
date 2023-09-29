@@ -1,4 +1,4 @@
-#define TEST
+//#define TEST
 
 using System.IO;
 
@@ -41,7 +41,7 @@ namespace App {
         private async void LoadCard() {
             await library.LoadLibrary("MainLibrary.json");
 #if TEST
-            await library.ProcessFileImage("b3656310-093d-4724-a399-7f7010843b1f-normal.jpg");
+            //await library.ProcessFileImage("b3656310-093d-4724-a399-7f7010843b1f-normal.jpg");
             var card = library.FindCard("Ajanis Pridemate");
             if (card == null) {
                 return;

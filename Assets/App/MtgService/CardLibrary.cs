@@ -35,7 +35,7 @@ namespace App.MtgService {
         private string _visionApiKey;
         private static Logger Log = new Logger(typeof(CardLibrary));
         private const string GoogleVisionApiKeyFileName = "GoogleVisonAPIKey.txt";
-        private const string ScryFallEndpoint = "https://ap:wa:wai.scryfall.com";
+        private const string ScryFallEndpoint = "https://api.scryfall.com";
         private const float CardAspectRatio = 6.35f / 8.89f;  // width/height
         private const int SentImageWidth = 350;
         private const int SentImageHeight = (int)(SentImageWidth / CardAspectRatio + 0.5f);
@@ -44,6 +44,8 @@ namespace App.MtgService {
             public string uri;
             public int total_values;
             public List<string> data;
+
+            public int NumCards() => data.Count;
         }
 
         public override string ToString() {
@@ -208,6 +210,7 @@ namespace App.MtgService {
             }
             ".Replace("$CONTENT", base64Content);
             var baseUrl = "https://vision.googleapis.com/v1/images:annotate?fields=responses&key=" + _visionApiKey;
+            Log.Info($"Calling VisionAPI with:\n{baseUrl}\n, body:{text}");
             var response = await baseUrl.WithTimeout(TimeSpan.FromMinutes(1))
                 .PostJsonAsync(JsonConvert.DeserializeObject(text));
             return await response.Content.ReadAsStringAsync();
@@ -229,6 +232,12 @@ namespace App.MtgService {
         }
 
         private async Task FetchAllCardNames() {
+            if (File.Exists(AllCardsFileName)) {
+                _allCardNames = JsonConvert.DeserializeObject<AllCardNames>(File.ReadAllText(AllCardsFileName));
+                Log.Info($"Using cached record of {_allCardNames.NumCards()}");
+                return;
+            }
+
             try {
                 _allCardNames = await ScryFallEndpoint.AppendPathSegment("catalog/card-names")
                     .SetQueryParam("format", "json")
