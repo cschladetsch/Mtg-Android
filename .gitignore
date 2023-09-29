@@ -20,5 +20,5 @@ Upgrade.log
 !/Packages/manifest.json
 
 /Data
-/Assets/SreamingResources/GoogleVisionAPIKey.txt
+/Assets/StreamingResources/GoogleVisionAPIKey.txt
 /UpgradeLog.hml

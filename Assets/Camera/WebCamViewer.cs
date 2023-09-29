@@ -40,6 +40,12 @@ namespace App.Camera {
             _log.Info("----------------------------");
 
             for (var i = 0; i < WebCamTexture.devices.Length; i++) {
+#if UNITY_ANDROID
+                var device = WebCamTexture.devices[i];
+                if (!device.isFrontFacing) {
+                    return i;
+                }
+#else
                 var cameraName = WebCamTexture.devices[i].name;
                 if (!cameraName.ToLower().Contains(WebCamName.ToLower())) {
                     continue;
@@ -47,6 +53,7 @@ namespace App.Camera {
 
                 _log.Info("Found device, index=" + i);
                 return i;
+#endif
             }
 
             _log.Error("Can not find your camera name. Here's a list of all cameras:");
